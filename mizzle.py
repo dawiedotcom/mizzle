@@ -3,60 +3,54 @@
 import argparse
 from datetime import datetime
 import sys
+import serial
 
-from mizzle.protocols import NMEA
+from mizzle.db import (DB, Readings)
 
-reading_type_description = {
-    'C0': 'Air temperature',
-    'C1': 'Internal temperature',
-    'C2': 'Heating temperature',
-    'C3': 'Aux. temperature',
-    'H0': 'Relative humidity',
-    'V0': 'Rain acculumulation',
-    'V1': 'Hail accumulation',
-    'Z0': 'Rain duration',
-    'Z1': 'Hail duration',
-    'R0': 'Rain current intensity',
-    'R1': 'Hail current intensity',
-    'U0': 'Supply voltage',
-    'U1': 'Heating voltage',
-    'U2': '3.5V ref. voltage',
-    'U3': 'Solar radiation',
-    'U4': 'Ultrasonic level sensor',
-    'A0': 'Wind direction min',
-    'A1': 'Wind direction average',
-    'A2': 'Wind direction max',
-    'S0': 'Wind speed min',
-    'S1': 'Wind speed average',
-    'S2': 'Wind speed max',
-    'P0': 'Pressure',
-}
+def run_from_stdin(args):
+    # Batch process data from stdin and commit everything to the database.
+    # The expected format is '<timestap> <xdr_data>'.
+    db_readings = []
+
+    for line in sys.stdin:
+        ts_str, xdr_txt = line.split(' ')
+        ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
+        db_readings.append(Readings.fromXDR(ts, xdr_txt))
+
+    db = DB()
+    with db.session() as session:
+        session.add_all(db_readings)
+        session.commit()
+
+def run_from_serial(args):
+    # Reads data directly from the serial device and commits readings to
+    # the database as they arrive
+    ws = serial.Serial(args.port, baudrate=args.baudrate)
+    db = DB()
+    while True:
+        xdr_txt = ws.readline().decode()
+        ts = datetime.now()
+
+        reading = Readings.fromXDR(ts, xdr_txt)
+
+        with db.session() as session:
+            session.add_all([reading])
+            session.commit()
 
 def main():
     argp = argparse.ArgumentParser()
-    argp.add_argument('-p', '--port', help='Serial port')
+    argp.add_argument('-p', '--port',
+                      help='Serial port')
+    argp.add_argument('-b', '--baudrate', default=19200, type=int,
+                      help='Serial port baudrate')
 
     args = argp.parse_args()
 
     if args.port:
-        return
+        run_from_serial(args)
     else:
-        input = sys.stdin
+        run_from_stdin(args)
 
-    parser = NMEA()
-    aggregated = {}
-    for line in input:
-        ts = datetime.now()
-        readings = parser.parse(ts, line)
-        for reading in readings:
-            print(reading)
-            reading_type = reading[2]
-            if not reading_type in aggregated:
-                aggregated[reading_type] = []
-            aggregated[reading_type].append(reading)
-        print()
-    for k,v in aggregated.items():
-        print(f'{reading_type_description.get(k, k):30}: {len(v)}')
 
 if __name__ == '__main__':
     main()
