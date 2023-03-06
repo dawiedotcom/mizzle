@@ -10,15 +10,21 @@ from mizzle.db import (DB, Readings)
 def run_from_stdin(args):
     # Batch process data from stdin and commit everything to the database.
     # The expected format is '<timestap> <xdr_data>'.
-    db_readings = []
-
-    for line in sys.stdin:
-        ts_str, xdr_txt = line.split(' ')
-        ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
-        db_readings.append(Readings.fromXDR(ts, xdr_txt))
-
     db = DB()
     with db.session() as session:
+        existing_dates = session.query(
+            Readings.datetime
+        ).all()
+        existing_dates = [d[0] for d in existing_dates]
+        db_readings = []
+
+        for line in sys.stdin:
+            ts_str, xdr_txt = line.split(' ')
+            ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
+            if ts in existing_dates:
+                continue
+            db_readings.append(Readings.fromXDR(ts, xdr_txt))
+
         session.add_all(db_readings)
         session.commit()
 
