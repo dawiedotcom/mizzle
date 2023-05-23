@@ -16,3 +16,9 @@ Use psql to to create a database:
 Export the postgres connection string
 
     export POSTGRES_URL='postgresql://postgres:<password>@<hostname>/mizzle'
+
+## Load data from text files
+
+```bash
+find 2023 -type f -exec cat {} + | grep 'XDR' > ./mizzle.py
+```
