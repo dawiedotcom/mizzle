@@ -9,6 +9,9 @@ Use psql to to create a database:
     psql -U postgres -h <hostname>
     CREATE DATABASE mizzle;
     \c mizzle
+    \q
+
+    psql -U postgres -h <hostname> -d mizzle < schema.sql
 
 Export the postgres connection string
 
