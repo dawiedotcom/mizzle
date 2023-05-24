@@ -1,11 +1,12 @@
 from datetime import datetime
 import psycopg2
+import os
 
 from mizzle.protocols import NMEA
 
 class DB:
     def __init__(self):
-        self.connection_string = 'postgresql://postgres:testingtesting@localhost:5433/mizzle'
+        self.connection_string = os.environ.get('POSTGRES_URL')
         self.conn = psycopg2.connect(self.connection_string)
     def __del__(self):
         self.conn.close()
