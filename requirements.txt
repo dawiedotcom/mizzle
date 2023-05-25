@@ -2,7 +2,7 @@ future==0.18.3
 greenlet==2.0.2
 iso8601==1.1.0
 psycopg2==2.9.5
+pyserial==3.5
 PyYAML==6.0
-serial==0.0.97
 SQLAlchemy==2.0.4
 typing_extensions==4.5.0
