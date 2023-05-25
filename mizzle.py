@@ -15,22 +15,6 @@ def run_from_stdin(args):
         ts_str, xdr_txt = line.split(' ')
         ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
         db.insert_reading(ts, xdr_txt)
-    #with db.session() as session:
-    #    existing_dates = session.query(
-    #        Readings.datetime
-    #    ).all()
-    #    existing_dates = [d[0] for d in existing_dates]
-    #    db_readings = []
-
-    #    for line in sys.stdin:
-    #        ts_str, xdr_txt = line.split(' ')
-    #        ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
-    #        if ts in existing_dates:
-    #            continue
-    #        db_readings.append(Readings.fromXDR(ts, xdr_txt))
-
-    #    session.add_all(db_readings)
-    #    session.commit()
 
 def run_from_serial(args):
     # Reads data directly from the serial device and commits readings to
@@ -41,11 +25,10 @@ def run_from_serial(args):
         xdr_txt = ws.readline().decode()
         ts = datetime.now()
 
-        reading = Readings.fromXDR(ts, xdr_txt)
-
-        with db.session() as session:
-            session.add_all([reading])
-            session.commit()
+        try:
+            db.insert_reading(ts, xdr_txt)
+        except Exception as err:
+            print(' '.join((ts, xdr_txt)))
 
 def main():
     argp = argparse.ArgumentParser()
