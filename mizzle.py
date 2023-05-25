@@ -28,7 +28,7 @@ def run_from_serial(args):
         try:
             db.insert_reading(ts, xdr_txt)
         except Exception as err:
-            print(' '.join((ts, xdr_txt)))
+            print(' '.join((ts.isoformat(), xdr_txt)))
 
 def main():
     argp = argparse.ArgumentParser()
