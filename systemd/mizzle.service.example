@@ -1,0 +1,9 @@
+[Unit]
+Description=Reads, decodes and saves data from weather station.
+
+[Service]
+User=<username>
+ExecStartPre=/bin/sleep 30
+Environment="POSTGRES_URL=postgresql://user:password@server/database"
+ExecStart=/path/to/mizzle/venv/bin/python /path/path/mizzle/mizzle.py -p /dev/ttyUSB0
+StandardOutput=append:/path/to/mizzle/db_missed
