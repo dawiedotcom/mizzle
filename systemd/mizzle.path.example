@@ -1,0 +1,12 @@
+[Unit]
+Description=Monitors the weather station USB port (/dev/ttyUSB0) and activates mizzle.service
+After=networking.target
+StartLimitIntervalSec=1
+
+[Path]
+PathExists=/dev/ttyUSB0
+TriggerLimitBurst=10
+TriggerLimitIntervalSec=5
+
+[Install]
+WantedBy=multi-user.target

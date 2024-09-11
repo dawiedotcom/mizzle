@@ -12,7 +12,11 @@ def run_from_stdin(args):
     # The expected format is '<timestap> <xdr_data>'.
     db = DB()
     for line in sys.stdin:
+        if not line.count(' ') == 1:
+            continue
         ts_str, xdr_txt = line.split(' ')
+        if not xdr_txt.strip():
+            continue
         ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
         db.insert_reading(ts, xdr_txt)
 
