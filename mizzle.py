@@ -20,11 +20,13 @@ def run_from_serial(args):
     # Reads data directly from the serial device and commits readings to
     # the database as they arrive
     ws = serial.Serial(args.port, baudrate=args.baudrate)
+    # Set the weather station mode to take a reading once a minute
+    ws.write(b'0XU,M=Q,I=60!')
+    # Create the database connection
     db = DB()
     while True:
         xdr_txt = ws.readline().decode()
         ts = datetime.now()
-
         try:
             db.insert_reading(ts, xdr_txt)
         except Exception as err:
