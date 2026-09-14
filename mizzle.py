@@ -39,6 +39,8 @@ def run_from_serial(args):
             ts = datetime.now()
         except Exception as err:
             continue
+        if xdr_txt.startswith("0XU,M=Q"):
+            continue
         try:
             db.insert_reading(ts, xdr_txt)
         except Exception as err:
