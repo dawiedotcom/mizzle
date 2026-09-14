@@ -20,24 +20,24 @@ def run_from_stdin(args):
         ts = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S.%f')
         db.insert_reading(ts, xdr_txt)
 
-def reset_connections(args):
+def reset_ws_connections(args):
     # Connect to the weather station
     ws = serial.Serial(args.port, baudrate=args.baudrate)
     # Set the weather station mode to take a reading once a minute
     ws.write(b'0XU,M=Q,I=60!')
-    # Create the database connection
-    db = DB()
-    return db, ws
+    return ws
 
 def run_from_serial(args):
     # Reads data directly from the serial device and commits readings to
     # the database as they arrive
-    db, ws = reset_connections(args)
+    db = DB()
+    ws = reset_ws_connections(args)
     while True:
         try:
             xdr_txt = ws.readline().decode()
             ts = datetime.now()
         except Exception as err:
+            ws = reset_ws_connections(args)
             continue
         if xdr_txt.startswith("0XU,M=Q"):
             continue
@@ -45,7 +45,7 @@ def run_from_serial(args):
             db.insert_reading(ts, xdr_txt)
         except Exception as err:
             print(' '.join((ts.isoformat(), xdr_txt)))
-            db, ws = reset_connections(args)
+            db = DB()
 
 def main():
     argp = argparse.ArgumentParser()
